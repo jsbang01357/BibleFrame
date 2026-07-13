@@ -4,6 +4,7 @@ const state = { verses: [], books: [], query: "", testament: "", book: "" };
 const el = {
   form: document.querySelector("#searchForm"), input: document.querySelector("#searchInput"),
   status: document.querySelector("#resultStatus"), results: document.querySelector("#results"),
+  resultsTitle: document.querySelector("#resultsTitle"),
   clear: document.querySelector("#clearButton"), testament: document.querySelector("#testamentFilter"),
   book: document.querySelector("#bookFilter"), bookCount: document.querySelector("#bookCount"),
   chapterCount: document.querySelector("#chapterCount"), verseCount: document.querySelector("#verseCount"),
@@ -80,16 +81,34 @@ function populateBooks() {
   }
 }
 
-el.form.addEventListener("submit", (event) => { event.preventDefault(); setQuery(el.input.value); });
+function scrollToResults() {
+  const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+  requestAnimationFrame(() => {
+    el.input.blur();
+    el.resultsTitle.scrollIntoView({ behavior, block: "start" });
+  });
+}
+
+el.form.addEventListener("submit", (event) => {
+  event.preventDefault();
+  if (composing) return;
+  setQuery(el.input.value);
+  scrollToResults();
+});
 let debounce;
 let composing = false;
 el.input.addEventListener("compositionstart", () => { composing = true; clearTimeout(debounce); });
 el.input.addEventListener("compositionend", () => { composing = false; setQuery(el.input.value); });
 el.input.addEventListener("input", (event) => { if (composing || event.isComposing) return; clearTimeout(debounce); debounce = setTimeout(() => setQuery(el.input.value), 160); });
+el.input.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" || composing || event.isComposing) return;
+  event.preventDefault();
+  el.form.requestSubmit();
+});
 el.testament.addEventListener("change", () => { state.testament = el.testament.value; if (state.book) { const book = state.books.find((item) => item.code === state.book); if (book?.testament !== state.testament && state.testament) { state.book = ""; el.book.value = ""; } } render(); });
 el.book.addEventListener("change", () => { state.book = el.book.value; const book = state.books.find((item) => item.code === state.book); if (book) { state.testament = book.testament; el.testament.value = book.testament; } render(); });
 el.clear.addEventListener("click", () => { state.testament = ""; state.book = ""; el.testament.value = ""; el.book.value = ""; setQuery(""); });
-document.querySelectorAll("[data-query]").forEach((button) => button.addEventListener("click", () => { setQuery(button.dataset.query || ""); document.querySelector("#resultsTitle").scrollIntoView({ behavior: "smooth" }); }));
+document.querySelectorAll("[data-query]").forEach((button) => button.addEventListener("click", () => { setQuery(button.dataset.query || ""); scrollToResults(); }));
 document.addEventListener("keydown", (event) => { if (event.key === "/" && document.activeElement !== el.input) { event.preventDefault(); el.input.focus(); } });
 el.results.addEventListener("click", async (event) => { const button = event.target.closest(".copy-link"); if (!button) return; try { await navigator.clipboard.writeText(`${button.dataset.reference} · ${button.dataset.link}`); button.textContent = "복사했어요 ✓"; setTimeout(() => { button.textContent = "구절 링크 복사"; }, 1500); } catch { button.textContent = "복사하지 못했어요"; } });
 
