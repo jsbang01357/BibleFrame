@@ -50,6 +50,11 @@ main { max-width:1200px; margin:auto; padding:28px 28px 70px; }
 .search-panel input { width:100%; min-width:0; color:var(--ink); border:0; outline:0; background:transparent; font-size:16px; }
 .search-panel kbd { padding:3px 7px; color:#91897d; border:1px solid #ddd5c8; border-radius:5px; background:#f6f2eb; }
 .search-panel button { padding:15px 25px; color:white; border:0; border-radius:11px; background:var(--gold); font-weight:700; cursor:pointer; }
+.hero-actions { margin-top:17px; display:flex; gap:13px; align-items:center; position:relative; z-index:1; }
+.lucky-button { min-height:44px; padding:0 17px; color:#f4e7ce; border:1px solid rgba(223,189,130,.68); border-radius:10px; background:rgba(255,255,255,.06); font-weight:700; cursor:pointer; }
+.lucky-button:hover:not(:disabled) { color:#272218; background:#dfbd82; }
+.lucky-button:disabled { opacity:.48; cursor:wait; }
+.lucky-hint { color:#a9a092; font-size:12px; }
 .suggestions { margin-top:18px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; position:relative; z-index:1; }
 .suggestions > span { margin-right:5px; color:#9f978a; font-size:12px; }
 .suggestions button { padding:8px 12px; color:#d9d0c2; border:1px solid rgba(255,255,255,.17); border-radius:999px; background:transparent; cursor:pointer; }
@@ -192,6 +197,9 @@ footer { max-width:1200px; margin:auto; padding:26px 28px 45px; display:flex; ju
   .search-panel { display:grid; }
   .search-panel label { min-height:54px; }
   .search-panel button { width:100%; min-height:52px; }
+  .hero-actions { align-items:stretch; flex-direction:column; }
+  .lucky-button { width:100%; min-height:52px; font-size:16px; }
+  .lucky-hint { text-align:center; }
   .suggestions > span { width:100%; }
   .stats { margin:0 10px; padding:22px 12px; grid-template-columns:repeat(3,1fr); gap:7px; text-align:center; }
   .stats div { display:block; }

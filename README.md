@@ -11,13 +11,14 @@
 - 가톨릭 정경 73권, 1,328장, 검색 가능한 35,379절
 - `요한복음 3:16`, `요 3장 16절` 같은 구절 위치 검색
 - 본문 키워드 검색과 구약·신약/성경 필터
+- 첫 화면에서 35,379절 중 한 구절을 무작위로 여는 `랜덤 말씀`
 - 검색 결과에서 해당 책·장·절을 바로 여는 성경 브라우저
 - 어르신도 편하게 읽을 수 있는 본문 글자 확대·축소와 기기별 설정 저장
 - 기기 내장 음성을 이용한 말씀 듣기, 읽기 속도, 절 강조
 - 15~60분 취침 타이머와 다음 장 자동재생
 - 이전 장·다음 장 이동 및 공유 가능한 읽기 URL
 - 검색 결과 링크 복사와 FAQ 화면
-- 장 단위 RAG JSONL과 ChatGPT 업로드용 ZIP 재생성
+- 범용 장 단위 RAG JSONL, Haystack 네이티브 문서와 업로드용 ZIP 재생성
 - TXT·JSON·JSONL·Word·PDF·RAG 전체 본문 다운로드
 - 73권 자동 목차·PDF 책갈피와 절마다 새 줄로 시작하는 PDF 읽기본
 - 데스크톱 사이드바와 모바일 상단 탭을 갖춘 정적 사이트
@@ -60,14 +61,24 @@ python3 scripts/build_downloads.py
 python3 scripts/test_catholic_build.py
 python3 scripts/test_downloads.py
 node scripts/test_search.mjs
+python3 scripts/test_haystack_export.py
 python3 -m http.server 8000 --directory site
+```
+
+Haystack은 정적 사이트의 필수 의존성이 아니라 로컬·백엔드 실험용 선택 사항입니다.
+
+```bash
+python3 -m venv .venv-haystack
+.venv-haystack/bin/pip install -r requirements-haystack.txt
+.venv-haystack/bin/python scripts/query_haystack.py "두려움에 관한 말씀" --top-k 5
 ```
 
 생성물:
 
 - `site/bible.json`: 브라우저 검색용 절 단위 데이터
 - `rag/chapters.jsonl`: 검색·임베딩용 장 단위 청크
-- `site/downloads/bibleframe-rag.zip`: ChatGPT 업로드용 패키지
+- `rag/haystack_documents.jsonl`: Haystack `Document` 호환 장 단위 청크
+- `site/downloads/bibleframe-rag.zip`: 범용·Haystack JSONL을 묶은 AI 연결 패키지
 - `site/downloads/bibleframe-ko-catholic-73.txt`: UTF-8 읽기·가공용 본문
 - `site/downloads/bibleframe-ko-catholic-73.json`: 전체 메타데이터와 절 배열
 - `site/downloads/bibleframe-ko-catholic-73.jsonl`: 한 줄에 한 절인 스트리밍 데이터

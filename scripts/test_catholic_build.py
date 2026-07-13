@@ -37,7 +37,7 @@ def main() -> None:
     for marker in (
         'data-view="search"', 'data-view="reader"', 'data-view="downloads"',
         'data-view="faq"', 'id="fontIncrease"', 'id="ttsPlay"',
-        'id="ttsVoice"', 'id="ttsTimer"',
+        'id="ttsVoice"', 'id="ttsTimer"', 'id="luckyButton"',
         'downloads/bibleframe-ko-catholic-73.pdf',
     ):
         assert marker in page
@@ -45,14 +45,23 @@ def main() -> None:
     assert 'url.searchParams.set("view", "reader")' in app
     assert "SpeechSynthesisUtterance" in app
     assert "scheduleSleepTimer" in app
+    assert "pickRandomVerse" in app
+    assert 'el.lucky.addEventListener("click", openLuckyVerse)' in app
     assert "SpeechSynthesisUtterance(`${heading}${item.verse}절." not in app
 
     rag_lines = (ROOT / "rag/chapters.jsonl").read_text(encoding="utf-8").splitlines()
     assert len(rag_lines) == 1_328
     assert json.loads(rag_lines[0])["metadata"]["book"] == "창세기"
 
+    haystack_lines = (ROOT / "rag/haystack_documents.jsonl").read_text(encoding="utf-8").splitlines()
+    assert len(haystack_lines) == 1_328
+    assert set(json.loads(haystack_lines[0])) == {"id", "content", "meta"}
+
     with zipfile.ZipFile(ROOT / "site/downloads/bibleframe-rag.zip") as archive:
-        assert set(archive.namelist()) == {"chapters.jsonl", "README_RAG.md"}
+        assert set(archive.namelist()) == {
+            "chapters.jsonl", "haystack_documents.jsonl", "query_haystack.py",
+            "requirements-haystack.txt", "README_RAG.md",
+        }
         assert archive.testzip() is None
         assert {item.date_time for item in archive.infolist()} == {(1980, 1, 1, 0, 0, 0)}
 

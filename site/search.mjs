@@ -61,3 +61,12 @@ export function scoreVerse(item, terms, fullQuery) {
   if (fullQuery && (reference === fullQuery || shortReference === fullQuery)) score += 200;
   return score;
 }
+
+export function pickRandomVerse(verses, random = Math.random, previousId = null) {
+  if (!Array.isArray(verses) || verses.length === 0) return null;
+  const sample = Number(random());
+  const bounded = Number.isFinite(sample) ? Math.min(Math.max(sample, 0), 0.999999999999) : 0;
+  let index = Math.floor(bounded * verses.length);
+  if (verses.length > 1 && verses[index]?.id === previousId) index = (index + 1) % verses.length;
+  return verses[index] || null;
+}

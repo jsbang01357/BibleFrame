@@ -7,8 +7,8 @@
     <meta name="theme-color" content="#191713" />
     <title>BibleFrame · 성경 말씀 탐색기</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='32' fill='%23191713'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-size='36' fill='%23dfbd82' font-family='serif'%3EB%3C/text%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="./styles.css?v=20260714-open-downloads-2" />
-    <script type="module" src="./app.js?v=20260714-open-downloads-2"></script>
+    <link rel="stylesheet" href="./styles.css?v=20260714-lucky-haystack-1" />
+    <script type="module" src="./app.js?v=20260714-lucky-haystack-1"></script>
   </head>
   <body>
     <div class="app-shell">
@@ -45,6 +45,10 @@
                 </label>
                 <button type="submit">말씀 찾기</button>
               </form>
+              <div class="hero-actions">
+                <button id="luckyButton" class="lucky-button" type="button" disabled>✦ 랜덤 말씀</button>
+                <span class="lucky-hint">35,379절 중 한 구절을 바로 엽니다.</span>
+              </div>
               <div class="suggestions" aria-label="추천 검색어">
                 <span>빠른 검색</span>
                 <button type="button" data-query="요한복음 3장 16절">요 3:16</button>
@@ -76,7 +80,7 @@
 
             <section class="rag-card" aria-labelledby="ragTitle">
               <div><p class="eyebrow">PORTABLE RAG</p><h2 id="ragTitle">말씀 코퍼스를<br />내 AI에도 연결하세요.</h2></div>
-              <div><p>장 단위 JSONL과 출처 메타데이터를 묶었습니다. 특정 AI 서비스나 벡터 DB에 종속되지 않습니다.</p><a href="./downloads/bibleframe-rag.zip" download>RAG ZIP 받기 <span>↓</span></a><a class="guide-link" href="./downloads/README_RAG.md">사용 안내</a></div>
+              <div><p>범용 장 단위 JSONL과 Haystack 네이티브 문서를 함께 묶었습니다. 특정 AI 서비스나 벡터 DB에 종속되지 않습니다.</p><a href="./downloads/bibleframe-rag.zip" download>RAG ZIP 받기 <span>↓</span></a><a class="guide-link" href="./downloads/README_RAG.md">사용 안내</a></div>
             </section>
           </div>
 
@@ -180,7 +184,7 @@
               <article class="download-card rag-download">
                 <span class="file-type">RAG ZIP</span>
                 <h2>장 단위 AI 패키지</h2>
-                <p>1,328개 장 단위 JSONL과 출처 안내를 묶었습니다. 개인 AI와 벡터 DB에 바로 연결하세요.</p>
+                <p>범용·Haystack JSONL과 바로 실행할 BM25 예제를 묶었습니다. 개인 AI와 벡터 DB에 연결하세요.</p>
                 <a href="./downloads/bibleframe-rag.zip" download>RAG ZIP 받기 <span>↓</span></a>
               </article>
             </div>

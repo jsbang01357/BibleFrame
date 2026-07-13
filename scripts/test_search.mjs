@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { normalize, parseReference, scoreVerse, termsFor } from "../site/search.mjs";
+import { normalize, parseReference, pickRandomVerse, scoreVerse, termsFor } from "../site/search.mjs";
 
 const verse = {
   code: "JHN", book: "요한 복음서", short: "요한", english: "John",
@@ -18,4 +18,11 @@ assert.deepEqual(parseReference("요한복음 3:16", books), { code: "JHN", chap
 assert.deepEqual(parseReference("요 3:16", books), { code: "JHN", chapter: 3, verse: 16 });
 assert.equal(parseReference("요한복음 사랑", books), null);
 
-console.log("OK: 검색 정규화·구절 일치·본문 점수 검증 완료");
+const randomVerses = [{ id: "GEN-1-1" }, { id: "JHN-3-16" }, { id: "REV-22-21" }];
+assert.equal(pickRandomVerse([], () => 0), null);
+assert.equal(pickRandomVerse(randomVerses, () => 0)?.id, "GEN-1-1");
+assert.equal(pickRandomVerse(randomVerses, () => 0.999)?.id, "REV-22-21");
+assert.equal(pickRandomVerse(randomVerses, () => 0, "GEN-1-1")?.id, "JHN-3-16");
+assert.equal(pickRandomVerse(randomVerses, () => Number.NaN)?.id, "GEN-1-1");
+
+console.log("OK: 검색 정규화·구절 일치·본문 점수·랜덤 말씀 검증 완료");

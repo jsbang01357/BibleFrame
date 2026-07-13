@@ -1,6 +1,9 @@
 # BibleFrame 가톨릭 정경 RAG 사용 안내
 
-`chapters.jsonl`은 Public Domain 영어 원문을 한국어로 기계 번역한 73권 장 단위 코퍼스입니다.
+Public Domain 영어 원문을 한국어로 기계 번역한 73권 장 단위 코퍼스입니다.
+
+- `chapters.jsonl`: 특정 프레임워크에 종속되지 않은 `id`, `text`, `metadata` 형식
+- `haystack_documents.jsonl`: Haystack `Document`의 `id`, `content`, `meta` 형식
 
 - 표시명: BibleFrame 73권 공개 번역 초안
 - 고지: 가톨릭 정경 기반 · 비공인 기계 번역 초안
@@ -9,3 +12,16 @@
 
 질문과 관련된 구절을 찾을 때 책·장·절을 함께 표시하고, 본문과 해설을 구분하세요.
 이 파일에 없는 내용을 성경 본문처럼 만들지 마세요.
+
+## Haystack 로컬 BM25 예제
+
+RAG ZIP을 푼 폴더에서 아래 명령을 실행합니다. 이 의존성은 정적 사이트 운영에는 필요하지 않습니다.
+
+```bash
+python3 -m venv .venv-haystack
+.venv-haystack/bin/pip install -r requirements-haystack.txt
+.venv-haystack/bin/python query_haystack.py "두려움에 관한 말씀" --top-k 5
+```
+
+메모리 문서 저장소는 로컬 실험용입니다. 운영 RAG로 확장할 때는 평가 질의 세트를 먼저 만들고,
+영구 문서 저장소와 희소·밀집 검색을 결합한 뒤 인용 구절 일치율을 측정하세요.

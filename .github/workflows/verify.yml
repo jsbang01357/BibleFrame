@@ -33,7 +33,8 @@ jobs:
       - run: python3 scripts/build_catholic_data.py
       - run: python3 scripts/build_downloads.py
       - run: python3 scripts/test_catholic_build.py
+      - run: python3 scripts/test_haystack_export.py
       - run: python3 scripts/test_downloads.py
       - run: node scripts/test_search.mjs
       - name: 생성물 변경 여부 확인
-        run: git diff --exit-code -- site/bible.json rag/chapters.jsonl site/downloads/
+        run: git diff --exit-code -- site/bible.json rag/ site/downloads/

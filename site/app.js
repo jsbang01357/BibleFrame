@@ -1,10 +1,10 @@
-import { normalize, parseReference, scoreVerse, termsFor } from "./search.mjs?v=20260714-catholic-73";
+import { normalize, parseReference, pickRandomVerse, scoreVerse, termsFor } from "./search.mjs?v=20260714-lucky-haystack-1";
 
 const FONT_SIZES = [19, 24, 29, 35];
 const FONT_LABELS = [80, 100, 120, 145];
 const state = {
   verses: [], books: [], chapters: new Map(), query: "", testament: "", book: "",
-  view: "search", readerBook: "GEN", readerChapter: 1, readerVerse: null, fontStep: 1,
+  view: "search", readerBook: "GEN", readerChapter: 1, readerVerse: null, fontStep: 1, lastLuckyId: null,
 };
 const ttsState = {
   active: false, paused: false, verseIndex: 0, generation: 0,
@@ -12,6 +12,7 @@ const ttsState = {
 };
 const el = {
   form: document.querySelector("#searchForm"), input: document.querySelector("#searchInput"),
+  lucky: document.querySelector("#luckyButton"),
   status: document.querySelector("#resultStatus"), results: document.querySelector("#results"),
   resultsTitle: document.querySelector("#resultsTitle"), clear: document.querySelector("#clearButton"),
   testament: document.querySelector("#testamentFilter"), book: document.querySelector("#bookFilter"),
@@ -172,6 +173,13 @@ function openReader(code, chapter, verse = null, { push = true } = {}) {
   setView("reader", { updateAddress: false, scroll: false });
   renderReader({ focusVerse: true });
   updateUrl({ view: "reader", book: state.readerBook, chapter: state.readerChapter, verse: state.readerVerse }, push ? "push" : "replace");
+}
+
+function openLuckyVerse() {
+  const item = pickRandomVerse(state.verses, Math.random, state.lastLuckyId);
+  if (!item) return;
+  state.lastLuckyId = item.id;
+  openReader(item.code, item.chapter, item.verse);
 }
 
 function moveChapter(direction, { scroll = true, stopAudio = true } = {}) {
@@ -390,6 +398,7 @@ function scrollToResults() {
 let debounce;
 let composing = false;
 el.form.addEventListener("submit", (event) => { event.preventDefault(); if (!composing) { setQuery(el.input.value); scrollToResults(); } });
+el.lucky.addEventListener("click", openLuckyVerse);
 el.input.addEventListener("compositionstart", () => { composing = true; clearTimeout(debounce); });
 el.input.addEventListener("compositionend", () => { composing = false; setQuery(el.input.value); });
 el.input.addEventListener("input", (event) => { if (composing || event.isComposing) return; clearTimeout(debounce); debounce = setTimeout(() => setQuery(el.input.value), 160); });
@@ -441,7 +450,7 @@ window.addEventListener("popstate", applyUrlState);
 
 async function boot() {
   try {
-    const response = await fetch("./bible.json?v=20260714-catholic-73");
+    const response = await fetch("./bible.json?v=20260714-lucky-haystack-1");
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const payload = await response.json();
     state.books = payload.books;
@@ -456,6 +465,7 @@ async function boot() {
     el.chapterCount.textContent = payload.meta.chapters.toLocaleString("ko-KR");
     el.verseCount.textContent = payload.meta.verses.toLocaleString("ko-KR");
     populateBooks();
+    el.lucky.disabled = false;
     initTts();
     try { applyFontStep(Number(localStorage.getItem("bibleframe-font-step") ?? 1), false); } catch { applyFontStep(1, false); }
     const url = new URL(window.location.href);
