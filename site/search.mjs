@@ -2,6 +2,13 @@ const STOP_WORDS = new Set([
   "성경", "말씀", "구절", "내용", "관련", "대해", "대한", "에서", "으로", "에게",
   "무엇", "뭐라고", "어떻게", "알려줘", "찾아줘", "보여줘", "하는", "있는", "것은",
 ]);
+const REFERENCE_ALIASES = {
+  JHN: ["요", "요한복음", "요한 복음"],
+  MAT: ["마태오복음", "마태오 복음"],
+  MRK: ["마르코복음", "마르코 복음"],
+  LUK: ["루카복음", "루카 복음"],
+  REV: ["묵시록", "요한묵시록"],
+};
 
 export function normalize(value) {
   return String(value)
@@ -28,7 +35,7 @@ export function termsFor(query) {
 export function parseReference(query, books) {
   const normalized = normalize(query);
   const aliases = books
-    .flatMap((book) => [book.name, book.short, book.code, book.english].map((alias) => ({
+    .flatMap((book) => [book.name, book.short, book.code, book.english, ...(REFERENCE_ALIASES[book.code] || [])].map((alias) => ({
       alias: normalize(alias), code: book.code,
     })))
     .sort((a, b) => b.alias.length - a.alias.length);

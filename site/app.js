@@ -1,4 +1,4 @@
-import { normalize, parseReference, scoreVerse, termsFor } from "./search.mjs";
+import { normalize, parseReference, scoreVerse, termsFor } from "./search.mjs?v=20260714-catholic-73";
 
 const FONT_SIZES = [19, 24, 29, 35];
 const FONT_LABELS = [80, 100, 120, 145];
@@ -101,7 +101,7 @@ function setQuery(value, updateAddress = true) {
 }
 
 function setView(view, { updateAddress = true, push = false, scroll = true } = {}) {
-  state.view = ["search", "reader", "faq"].includes(view) ? view : "search";
+  state.view = ["search", "reader", "downloads", "faq"].includes(view) ? view : "search";
   document.querySelectorAll("[data-view-panel]").forEach((panel) => { panel.hidden = panel.dataset.viewPanel !== state.view; });
   document.querySelectorAll("[data-view]").forEach((button) => {
     const active = button.dataset.view === state.view;
@@ -432,7 +432,7 @@ el.ttsAutoNext.addEventListener("change", () => storeSetting("bibleframe-tts-aut
 
 function applyUrlState() {
   const url = new URL(window.location.href);
-  const requestedView = ["reader", "faq"].includes(url.searchParams.get("view")) ? url.searchParams.get("view") : "search";
+  const requestedView = ["reader", "downloads", "faq"].includes(url.searchParams.get("view")) ? url.searchParams.get("view") : "search";
   if (requestedView === "reader") {
     openReader(url.searchParams.get("book") || state.readerBook, url.searchParams.get("chapter") || 1, url.searchParams.get("verse"), { push: false });
   } else setView(requestedView, { updateAddress: false });
@@ -441,7 +441,7 @@ window.addEventListener("popstate", applyUrlState);
 
 async function boot() {
   try {
-    const response = await fetch("./bible.json");
+    const response = await fetch("./bible.json?v=20260714-catholic-73");
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const payload = await response.json();
     state.books = payload.books;
