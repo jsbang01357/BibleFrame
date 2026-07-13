@@ -2,8 +2,7 @@
 
 ## 진행 중
 
-- [ ] GitHub에 독립 저장소 `BibleFrame`을 만들고 `main`을 푸시한다.
-- [ ] `bibleframe.jisong.dev` 사용자 지정 도메인을 연결하고 실제 응답을 확인한다.
+- 없음
 
 ## 완료
 
@@ -14,6 +13,9 @@
 - [x] 데이터 무결성과 검색 회귀 검사를 추가했다.
 - [x] Cloudflare Pages 프로젝트 `bibleframe`을 만들고 실배포 응답을 검증했다.
 - [x] `bibleframe.pages.dev`의 HTML, 검색 JSON, RAG ZIP이 모두 `200`인지 확인했다.
+- [x] GitHub 공개 저장소 `jsbang01357/BibleFrame`을 만들고 `main`을 푸시했다.
+- [x] `bibleframe.jisong.dev`를 Pages에 연결하고 TLS 포함 `200` 응답을 확인했다.
+- [x] 운영 주소에서 `요 3:16` 검색 결과와 브라우저 콘솔을 재검증했다.
 
 ## 현재 요약
 
@@ -21,6 +23,7 @@
 - 성경: 66권
 - 장: 1,188장 (eBible.org 배포본 기준)
 - 절: 30,991절
-- 운영 예정 주소: `https://bibleframe.jisong.dev`
-- 현재 공개 주소: `https://bibleframe.pages.dev`
-- 차단 사항: GitHub CLI 재로그인, Cloudflare 대시보드 로그인 후 사용자 지정 도메인 연결
+- 운영 주소: `https://bibleframe.jisong.dev`
+- Pages 주소: `https://bibleframe.pages.dev`
+- GitHub: `https://github.com/jsbang01357/BibleFrame`
+- 차단 사항: 없음
