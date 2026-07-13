@@ -5,7 +5,7 @@
 - [x] 첫 화면에 무작위 구절을 바로 여는 `랜덤 말씀` 기능을 추가한다.
 - [x] Haystack 네이티브 문서 JSONL과 선택형 로컬 BM25 검색 예제를 추가한다.
 - [x] 정적 검색 회귀·RAG 산출물·데스크톱/모바일 화면을 검증한다.
-- [ ] Cloudflare Pages 운영 배포와 GitHub 초안 PR·Actions를 갱신한다.
+- [x] Cloudflare Pages 운영 배포와 GitHub 초안 PR·Actions를 갱신한다.
 - [x] 현재 66권 Korean Bible 1910 데이터와 화면·RAG 의존 범위를 확인한다.
 - [x] 한국어 가톨릭 73권 본문의 합법적 공개 데이터와 CBCK 이용조건을 확인한다.
 - [x] Public Domain `World English Bible (Catholic)` 73권을 Qwen으로 새 번역하는 경로를 결정한다.
@@ -57,10 +57,10 @@
 - 운영 주소: `https://bibleframe.jisong.dev`
 - Pages 주소: `https://bibleframe.pages.dev`
 - GitHub: `https://github.com/jsbang01357/BibleFrame`
-- 이번 변경: Qwen3-Next 80B 전체 번역·2차 교정, 가톨릭 정경 73권 검색·RAG 전환
-- 운영 배포: Cloudflare Pages 73권판 배포 및 HTML·JSON·RAG ZIP `200` 확인
+- 이번 변경: 첫 화면 랜덤 말씀, Haystack 네이티브 JSONL·로컬 BM25 예제
+- 운영 배포: 랜덤 구절 이동·강조와 새 RAG ZIP `200` 확인
 - 남은 작업: GitHub 초안 PR `#1` 검토·병합
-- 현재 진행: GitHub Actions 최종 확인
+- 현재 진행: 커밋 `7b7c478` GitHub Actions 성공, 초안 PR 검토 대기
 
 ## 가톨릭 성경 전환 메모
 
