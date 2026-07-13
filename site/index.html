@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="한국어 성경 66권을 장·절과 본문으로 찾는 BibleFrame" />
+    <meta name="theme-color" content="#191713" />
+    <title>BibleFrame · 성경 말씀 탐색기</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='32' fill='%23191713'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-size='36' fill='%23dfbd82' font-family='serif'%3EB%3C/text%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="BibleFrame 홈">
+        <span class="brand-mark" aria-hidden="true">B</span>
+        <span><strong>BibleFrame</strong><small>성경 말씀 탐색기</small></span>
+      </a>
+      <nav aria-label="외부 링크">
+        <a href="https://ebible.org/bible/details.php?id=kor" target="_blank" rel="noopener">본문 출처</a>
+        <a href="https://github.com/jsbang01357/BibleFrame" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <p class="eyebrow">SEARCH THE SCRIPTURE</p>
+        <h1 id="hero-title">찾고 싶은 말씀을<br /><em>책·장·절까지</em> 또렷하게.</h1>
+        <p class="hero-copy">1910 한국어 성경 전체를 본문 키워드나 구절 위치로 찾습니다. 서버로 검색어를 보내지 않아요.</p>
+
+        <form id="searchForm" class="search-panel" role="search">
+          <label for="searchInput">
+            <span aria-hidden="true">⌕</span>
+            <input id="searchInput" type="search" autocomplete="off" placeholder="예: 요한복음 3:16, 사랑, 두려워 말라" />
+            <kbd>/</kbd>
+          </label>
+          <button type="submit">말씀 찾기</button>
+        </form>
+        <div class="suggestions" aria-label="추천 검색어">
+          <span>빠른 검색</span>
+          <button type="button" data-query="요한복음 3장 16절">요 3:16</button>
+          <button type="button" data-query="사랑">사랑</button>
+          <button type="button" data-query="두려워 말라">두려워 말라</button>
+          <button type="button" data-query="지혜">지혜</button>
+          <button type="button" data-query="평안">평안</button>
+        </div>
+      </section>
+
+      <section class="stats" aria-label="성경 통계">
+        <div><strong id="bookCount">66</strong><span>권</span></div>
+        <div><strong id="chapterCount">1,188</strong><span>장</span></div>
+        <div><strong id="verseCount">30,991</strong><span>절</span></div>
+        <p>Korean Bible 1910 · Public Domain</p>
+      </section>
+
+      <section class="explorer" aria-labelledby="resultsTitle">
+        <div class="explorer-head">
+          <div><p class="eyebrow">SCRIPTURE FINDER</p><h2 id="resultsTitle">검색 결과</h2></div>
+          <div class="filters">
+            <label><span>구분</span><select id="testamentFilter"><option value="">구약·신약 전체</option><option value="old">구약</option><option value="new">신약</option></select></label>
+            <label><span>성경</span><select id="bookFilter"><option value="">66권 전체</option></select></label>
+          </div>
+        </div>
+        <div class="result-summary"><p id="resultStatus" aria-live="polite">성경 데이터를 불러오는 중입니다.</p><button id="clearButton" type="button" hidden>초기화</button></div>
+        <div id="results" class="results" aria-live="polite"></div>
+      </section>
+
+      <section class="rag-card" aria-labelledby="ragTitle">
+        <div><p class="eyebrow">PORTABLE RAG</p><h2 id="ragTitle">말씀 코퍼스를<br />내 AI에도 연결하세요.</h2></div>
+        <div><p>장 단위 JSONL과 출처 메타데이터를 묶었습니다. 특정 AI 서비스나 벡터 DB에 종속되지 않습니다.</p><a href="./downloads/bibleframe-rag.zip" download>RAG ZIP 받기 <span>↓</span></a><a class="guide-link" href="./downloads/README_RAG.md">사용 안내</a></div>
+      </section>
+
+      <aside class="notice"><strong>본문 안내</strong><p>이 사이트는 eBible.org가 Public Domain으로 제공하는 1910 한국어 성경을 사용합니다. 현대 번역과 표현이 다를 수 있습니다. 제공 원본은 베드로전서가 4장 14절에서 끝나는 상태이며, 다른 번역문을 임의로 섞지 않았습니다.</p></aside>
+    </main>
+
+    <footer><p>BibleFrame · source-traceable scripture search</p><p>Made with care at jisong.dev</p></footer>
+  </body>
+</html>

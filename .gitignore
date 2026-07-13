@@ -1,0 +1,8 @@
+.DS_Store
+__pycache__/
+*.pyc
+.wrangler/
+vendor/kor1910/*.sql
+vendor/kor1910/*.xml
+vendor/kor1910/*.css
+vendor/kor1910/*.asc
