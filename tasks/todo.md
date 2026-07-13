@@ -16,6 +16,7 @@
 - [x] GitHub 공개 저장소 `jsbang01357/BibleFrame`을 만들고 `main`을 푸시했다.
 - [x] `bibleframe.jisong.dev`를 Pages에 연결하고 TLS 포함 `200` 응답을 확인했다.
 - [x] 운영 주소에서 `요 3:16` 검색 결과와 브라우저 콘솔을 재검증했다.
+- [x] RAG ZIP을 결정적으로 생성하도록 수정하고 연속 빌드 해시와 GitHub Actions 성공을 확인했다.
 
 ## 현재 요약
 
