@@ -2,7 +2,7 @@
 
 ## 진행 중
 
-- [ ] GitHub와 Cloudflare Pages 운영 주소에 반영한다.
+- 없음
 
 ## 완료
 
@@ -11,6 +11,7 @@
 - [x] 책·장·이전·다음 이동과 80~145% 글자 확대·축소 및 기기 저장을 구현했다.
 - [x] 공유 가능한 읽기 URL과 기존 구절 링크 호환을 구현했다.
 - [x] 데스크톱·모바일 화면 및 기존 검색·데이터 회귀 검사를 통과했다.
+- [x] GitHub `main`과 Cloudflare Pages 운영 주소에 반영하고 실제 검색-읽기 흐름을 확인했다.
 - [x] `RIHP_RAG`에서 계승할 정적 검색·RAG 구조를 확인했다.
 - [x] Public Domain으로 명시된 Korean Bible 1910 원본을 확보했다.
 - [x] 절 단위 검색 데이터와 장 단위 RAG 생성기를 구현했다.
@@ -33,5 +34,6 @@
 - Pages 주소: `https://bibleframe.pages.dev`
 - GitHub: `https://github.com/jsbang01357/BibleFrame`
 - 이번 변경: 사이드바 3개 화면, 성경 브라우저, 본문 확대·축소, 검색 결과 연결
-- 남은 작업: GitHub push 및 Cloudflare Pages 운영 배포
+- 운영 배포 커밋: `46d7d30`
+- 남은 작업: 없음
 - 차단 사항: 없음
