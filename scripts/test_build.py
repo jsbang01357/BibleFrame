@@ -33,6 +33,7 @@ def main() -> None:
     with zipfile.ZipFile(archive_path) as archive:
         assert set(archive.namelist()) == {"chapters.jsonl", "README_RAG.md"}
         assert archive.testzip() is None
+        assert {item.date_time for item in archive.infolist()} == {(1980, 1, 1, 0, 0, 0)}
 
     peter = [item for item in payload["verses"] if item["code"] == "1PE"]
     assert max(item["chapter"] for item in peter) == 4

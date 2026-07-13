@@ -148,8 +148,14 @@ ChatGPT 프로젝트나 대화에 파일을 업로드하고 다음처럼 요청�
 """
     (downloads / "README_RAG.md").write_text(guide, encoding="utf-8")
     with zipfile.ZipFile(downloads / "bibleframe-rag.zip", "w", zipfile.ZIP_DEFLATED) as archive:
-        archive.write(rag_path, "chapters.jsonl")
-        archive.writestr("README_RAG.md", guide)
+        for name, content in (
+            ("chapters.jsonl", rag_path.read_bytes()),
+            ("README_RAG.md", guide.encode("utf-8")),
+        ):
+            info = zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = 0o644 << 16
+            archive.writestr(info, content)
 
     stats = {"books": len(books_payload), "chapters": len(chapters), "verses": len(verses)}
     print(json.dumps(stats, ensure_ascii=False))
@@ -158,4 +164,3 @@ ChatGPT 프로젝트나 대화에 파일을 업로드하고 다음처럼 요청�
 
 if __name__ == "__main__":
     build()
-
