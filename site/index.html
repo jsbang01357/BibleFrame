@@ -8,7 +8,7 @@
     <title>BibleFrame · 성경 말씀 탐색기</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='32' fill='%23191713'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-size='36' fill='%23dfbd82' font-family='serif'%3EB%3C/text%3E%3C/svg%3E" />
     <link rel="stylesheet" href="./styles.css" />
-    <script type="module" src="./app.js?v=20260713-bible-browser"></script>
+    <script type="module" src="./app.js?v=20260713-bedtime-tts"></script>
   </head>
   <body>
     <div class="app-shell">
@@ -101,6 +101,24 @@
               </div>
             </div>
 
+            <section class="tts-player" aria-labelledby="ttsTitle">
+              <div class="tts-heading">
+                <div><p class="eyebrow">BEDTIME AUDIO</p><h2 id="ttsTitle">말씀 듣기</h2></div>
+                <p id="ttsStatus" aria-live="polite">목소리와 시간을 고른 뒤 재생해보세요.</p>
+              </div>
+              <div class="tts-settings">
+                <label><span>목소리</span><select id="ttsVoice"><option value="">기기 기본 음성</option></select></label>
+                <label><span>읽기 속도</span><select id="ttsRate"><option value="0.78">아주 천천히</option><option value="0.9" selected>천천히</option><option value="1">보통</option><option value="1.12">조금 빠르게</option></select></label>
+                <label><span>취침 타이머</span><select id="ttsTimer"><option value="0">사용 안 함</option><option value="15">15분</option><option value="30" selected>30분</option><option value="45">45분</option><option value="60">60분</option></select></label>
+              </div>
+              <div class="tts-actions">
+                <button id="ttsPlay" class="tts-primary" type="button">▶ 재생</button>
+                <button id="ttsStop" type="button" disabled>■ 정지</button>
+                <label class="auto-next"><input id="ttsAutoNext" type="checkbox" checked /><span>다음 장 자동재생</span></label>
+              </div>
+              <p class="tts-note">기기에 설치된 음성을 사용합니다. 화면이 잠기면 일부 모바일 브라우저에서는 재생이 멈출 수 있어요.</p>
+            </section>
+
             <nav class="chapter-nav" aria-label="장 이동">
               <button id="previousChapter" type="button">← 이전 장</button>
               <strong id="chapterHeading">창세기 1장</strong>
@@ -120,6 +138,7 @@
               <details><summary>검색어가 서버에 저장되나요?</summary><p>아니요. 검색과 성경 읽기는 내려받은 데이터로 사용자의 브라우저 안에서 처리됩니다.</p></details>
               <details><summary>RAG ZIP은 어디에 쓰나요?</summary><p>장 단위 JSONL 본문을 ChatGPT 프로젝트나 벡터 데이터베이스 등에 넣어 개인용 성경 질의 시스템을 만들 때 사용할 수 있습니다.</p></details>
               <details><summary>글자를 더 크게 볼 수 있나요?</summary><p>성경 브라우저 상단의 ‘가−’, 퍼센트, ‘가＋’ 버튼으로 본문 크기를 조절할 수 있습니다. 선택한 크기는 이 기기에 기억됩니다.</p></details>
+              <details><summary>목소리로 성경을 들을 수 있나요?</summary><p>성경 브라우저의 ‘말씀 듣기’에서 기기에 설치된 음성, 속도, 취침 타이머를 선택할 수 있습니다. 사용 가능한 목소리 수와 화면 잠금 중 재생 여부는 기기와 브라우저에 따라 다릅니다.</p></details>
               <details><summary>본문에 빠진 부분이 있나요?</summary><p>제공 원본은 베드로전서가 4장 14절에서 끝납니다. 다른 번역을 임의로 섞지 않고 원본 상태를 그대로 밝힙니다.</p></details>
             </div>
             <aside class="notice"><strong>본문 안내</strong><p>이 사이트는 eBible.org가 Public Domain으로 제공하는 1910 한국어 성경을 사용합니다. 자세한 검수 기록은 GitHub 저장소에서 확인할 수 있습니다.</p></aside>

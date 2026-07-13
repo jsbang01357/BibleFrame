@@ -41,12 +41,14 @@ def main() -> None:
 
     page = (ROOT / "site" / "index.html").read_text(encoding="utf-8")
     app = (ROOT / "site" / "app.js").read_text(encoding="utf-8")
-    for marker in ('data-view="search"', 'data-view="reader"', 'data-view="faq"', 'id="fontIncrease"'):
+    for marker in ('data-view="search"', 'data-view="reader"', 'data-view="faq"', 'id="fontIncrease"', 'id="ttsPlay"', 'id="ttsVoice"', 'id="ttsTimer"'):
         assert marker in page
     assert "data-open-verse" in app
     assert 'url.searchParams.set("view", "reader")' in app
+    assert "SpeechSynthesisUtterance" in app
+    assert "scheduleSleepTimer" in app
 
-    print("OK: 성경 데이터 · RAG ZIP · 검색-브라우저 연결 UI 검증 완료")
+    print("OK: 성경 데이터 · RAG ZIP · 검색-브라우저 연결 · 취침 TTS UI 검증 완료")
 
 
 if __name__ == "__main__":
