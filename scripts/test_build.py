@@ -39,7 +39,14 @@ def main() -> None:
     assert max(item["chapter"] for item in peter) == 4
     assert max(item["verse"] for item in peter if item["chapter"] == 4) == 14
 
-    print("OK: 66권 · 1,188장 · 30,991절 · 상류 누락 기록 · RAG ZIP 검증 완료")
+    page = (ROOT / "site" / "index.html").read_text(encoding="utf-8")
+    app = (ROOT / "site" / "app.js").read_text(encoding="utf-8")
+    for marker in ('data-view="search"', 'data-view="reader"', 'data-view="faq"', 'id="fontIncrease"'):
+        assert marker in page
+    assert "data-open-verse" in app
+    assert 'url.searchParams.set("view", "reader")' in app
+
+    print("OK: 성경 데이터 · RAG ZIP · 검색-브라우저 연결 UI 검증 완료")
 
 
 if __name__ == "__main__":
