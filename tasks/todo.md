@@ -15,7 +15,7 @@
 - [x] 코드와 한국어 번역 데이터의 오픈 라이선스 경계를 명확히 문서화한다.
 - [x] TXT·JSON·JSONL·Word·PDF 전체 본문 다운로드를 생성하고 검증한다.
 - [x] 사이드바 3번째에 다운로드 화면을 추가하고 FAQ를 4번째로 옮긴다.
-- [ ] 다운로드 화면과 파일을 Cloudflare Pages에 재배포하고 실제 브라우저에서 확인한다.
+- [x] 다운로드 화면과 파일을 Cloudflare Pages에 재배포하고 실제 브라우저에서 확인한다.
 
 ## 완료
 
@@ -42,6 +42,8 @@
 - [x] `bibleframe.jisong.dev`를 Pages에 연결하고 TLS 포함 `200` 응답을 확인했다.
 - [x] 운영 주소에서 `요 3:16` 검색 결과와 브라우저 콘솔을 재검증했다.
 - [x] RAG ZIP을 결정적으로 생성하도록 수정하고 연속 빌드 해시와 GitHub Actions 성공을 확인했다.
+- [x] 전체 본문 다운로드를 결정적으로 생성하고 PDF·DOCX 전체 렌더와 실서비스 파일 응답을 확인했다.
+- [x] GitHub 작업 브랜치와 초안 PR `#1`에 원문·번역·다운로드 산출물을 게시했다.
 
 ## 현재 요약
 
@@ -53,8 +55,8 @@
 - GitHub: `https://github.com/jsbang01357/BibleFrame`
 - 이번 변경: Qwen3-Next 80B 전체 번역·2차 교정, 가톨릭 정경 73권 검색·RAG 전환
 - 운영 배포: Cloudflare Pages 73권판 배포 및 HTML·JSON·RAG ZIP `200` 확인
-- 남은 작업: 다운로드 허브 운영 배포와 GitHub 게시
-- 현재 진행: Cloudflare Pages 재배포·실서비스 검증
+- 남은 작업: GitHub 초안 PR `#1` 검토·병합
+- 현재 진행: GitHub Actions 최종 확인
 
 ## 가톨릭 성경 전환 메모
 
