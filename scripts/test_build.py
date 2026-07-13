@@ -47,6 +47,7 @@ def main() -> None:
     assert 'url.searchParams.set("view", "reader")' in app
     assert "SpeechSynthesisUtterance" in app
     assert "scheduleSleepTimer" in app
+    assert "SpeechSynthesisUtterance(`${heading}${item.verse}절." not in app
 
     print("OK: 성경 데이터 · RAG ZIP · 검색-브라우저 연결 · 취침 TTS UI 검증 완료")
 

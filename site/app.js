@@ -304,7 +304,7 @@ function speakCurrentVerse(generation) {
   const item = verses[ttsState.verseIndex];
   const book = state.books.find((entry) => entry.code === state.readerBook);
   const heading = ttsState.verseIndex === 0 ? `${book?.name || item.book} ${state.readerChapter}장. ` : "";
-  const utterance = new SpeechSynthesisUtterance(`${heading}${item.verse}절. ${item.text}`);
+  const utterance = new SpeechSynthesisUtterance(`${heading}${item.text}`);
   const selectedVoice = ttsState.voices.find((voice) => voice.voiceURI === el.ttsVoice.value);
   if (selectedVoice) utterance.voice = selectedVoice;
   utterance.lang = selectedVoice?.lang || "ko-KR";
