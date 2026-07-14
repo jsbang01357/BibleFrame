@@ -1,17 +1,22 @@
-import { normalize, parseReference, scoreVerse, termsFor } from "./search.mjs";
+import { normalize, parseReference, pickRandomVerse, scoreVerse, termsFor } from "./search.mjs?v=20260714-gcp-rag-audio-1";
 
 const FONT_SIZES = [19, 24, 29, 35];
 const FONT_LABELS = [80, 100, 120, 145];
 const state = {
   verses: [], books: [], chapters: new Map(), query: "", testament: "", book: "",
-  view: "search", readerBook: "GEN", readerChapter: 1, readerVerse: null, fontStep: 1,
+  view: "search", readerBook: "GEN", readerChapter: 1, readerVerse: null, fontStep: 1, lastLuckyId: null,
+  ragRequestId: 0,
 };
 const ttsState = {
   active: false, paused: false, verseIndex: 0, generation: 0,
-  timerId: null, expiresAt: null, voices: [], utterance: null,
+  timerId: null, expiresAt: null, voices: [], utterance: null, mode: null, manifest: null,
 };
 const el = {
   form: document.querySelector("#searchForm"), input: document.querySelector("#searchInput"),
+  lucky: document.querySelector("#luckyButton"),
+  ragAnswer: document.querySelector("#ragAnswer"), ragStatus: document.querySelector("#ragStatus"),
+  ragText: document.querySelector("#ragText"), ragSources: document.querySelector("#ragSources"),
+  ragMode: document.querySelector("#ragMode"),
   status: document.querySelector("#resultStatus"), results: document.querySelector("#results"),
   resultsTitle: document.querySelector("#resultsTitle"), clear: document.querySelector("#clearButton"),
   testament: document.querySelector("#testamentFilter"), book: document.querySelector("#bookFilter"),
@@ -25,6 +30,7 @@ const el = {
   ttsRate: document.querySelector("#ttsRate"), ttsTimer: document.querySelector("#ttsTimer"),
   ttsPlay: document.querySelector("#ttsPlay"), ttsStop: document.querySelector("#ttsStop"),
   ttsAutoNext: document.querySelector("#ttsAutoNext"), ttsStatus: document.querySelector("#ttsStatus"),
+  chapterAudio: document.querySelector("#chapterAudio"),
 };
 
 const escapeHtml = (value) => String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
@@ -94,14 +100,60 @@ function updateUrl(values, mode = "replace") {
 }
 
 function setQuery(value, updateAddress = true) {
-  state.query = value.trim();
+  const nextQuery = value.trim();
+  if (nextQuery !== state.query) clearRagAnswer();
+  state.query = nextQuery;
   el.input.value = value;
   if (updateAddress) updateUrl({ q: state.query || null });
   renderSearch();
 }
 
+function clearRagAnswer() {
+  state.ragRequestId += 1;
+  el.ragAnswer.hidden = true;
+  el.ragStatus.textContent = "";
+  el.ragText.textContent = "";
+  el.ragSources.replaceChildren();
+}
+
+function renderRagAnswer(payload) {
+  el.ragMode.textContent = payload.mode === "hybrid" ? "BM25 + Vertex 의미 검색" : "BM25 검색";
+  el.ragStatus.textContent = "비공인 기계 번역 초안에 근거한 AI 답변입니다.";
+  el.ragText.innerHTML = escapeHtml(payload.answer || "답변을 만들지 못했습니다.").replaceAll("\n", "<br />");
+  el.ragSources.innerHTML = (payload.sources || []).map((source) => `
+    <button type="button" data-rag-source data-code="${escapeHtml(source.book_code)}" data-chapter="${source.chapter}" data-verse="${source.verse_start}">
+      <span>[${source.index}]</span><strong>${escapeHtml(source.reference)}</strong><small>성경 브라우저에서 읽기 →</small>
+    </button>`).join("");
+}
+
+async function requestRagAnswer(query) {
+  const trimmed = query.trim();
+  if (trimmed.length < 2) { clearRagAnswer(); return; }
+  const requestId = ++state.ragRequestId;
+  el.ragAnswer.hidden = false;
+  el.ragMode.textContent = "BM25 + Vertex 의미 검색";
+  el.ragStatus.textContent = "관련 본문을 찾고 답변을 만들고 있어요…";
+  el.ragText.textContent = "";
+  el.ragSources.replaceChildren();
+  try {
+    const response = await fetch("/api/rag", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: trimmed, top_k: 6 }),
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const payload = await response.json();
+    if (requestId !== state.ragRequestId) return;
+    renderRagAnswer(payload);
+  } catch {
+    if (requestId !== state.ragRequestId) return;
+    el.ragStatus.textContent = "말씀 길잡이에 잠시 연결하지 못했어요. 아래 정확한 구절 검색은 그대로 사용할 수 있습니다.";
+    el.ragText.textContent = "";
+  }
+}
+
 function setView(view, { updateAddress = true, push = false, scroll = true } = {}) {
-  state.view = ["search", "reader", "faq"].includes(view) ? view : "search";
+  state.view = ["search", "reader", "downloads", "faq"].includes(view) ? view : "search";
   document.querySelectorAll("[data-view-panel]").forEach((panel) => { panel.hidden = panel.dataset.viewPanel !== state.view; });
   document.querySelectorAll("[data-view]").forEach((button) => {
     const active = button.dataset.view === state.view;
@@ -174,6 +226,13 @@ function openReader(code, chapter, verse = null, { push = true } = {}) {
   updateUrl({ view: "reader", book: state.readerBook, chapter: state.readerChapter, verse: state.readerVerse }, push ? "push" : "replace");
 }
 
+function openLuckyVerse() {
+  const item = pickRandomVerse(state.verses, Math.random, state.lastLuckyId);
+  if (!item) return;
+  state.lastLuckyId = item.id;
+  openReader(item.code, item.chapter, item.verse);
+}
+
 function moveChapter(direction, { scroll = true, stopAudio = true } = {}) {
   if (stopAudio && ttsState.active) stopReading("장을 이동해 재생을 멈췄어요.");
   const bookIndex = state.books.findIndex((item) => item.code === state.readerBook);
@@ -222,21 +281,60 @@ function storeSetting(key, value) {
 }
 
 function populateVoices() {
-  if (!speechSupported()) return;
-  const selected = el.ttsVoice.value || getStoredSetting("bibleframe-tts-voice");
-  const voices = window.speechSynthesis.getVoices();
+  const stored = getStoredSetting("bibleframe-tts-voice");
+  const selected = stored || (ttsState.manifest ? "cloud:kore" : el.ttsVoice.value);
+  const voices = speechSupported() ? window.speechSynthesis.getVoices() : [];
   const koreanVoices = voices.filter((voice) => /^ko(?:-|_)/i.test(voice.lang));
   ttsState.voices = (koreanVoices.length ? koreanVoices : voices).sort((a, b) => a.name.localeCompare(b.name, "ko"));
-  el.ttsVoice.replaceChildren(new Option("기기 기본 음성", ""));
+  el.ttsVoice.replaceChildren();
+  for (const voice of ttsState.manifest?.voices || []) {
+    el.ttsVoice.append(new Option(`${voice.name} · GCP MP3`, `cloud:${voice.id}`));
+  }
+  if (speechSupported()) el.ttsVoice.append(new Option("기기 기본 음성 · 실시간", "device:"));
   for (const voice of ttsState.voices) {
     const suffix = voice.localService ? "" : " · 온라인";
-    el.ttsVoice.append(new Option(`${voice.name} (${voice.lang})${suffix}`, voice.voiceURI));
+    el.ttsVoice.append(new Option(`${voice.name} (${voice.lang})${suffix}`, `device:${voice.voiceURI}`));
   }
-  if ([...el.ttsVoice.options].some((option) => option.value === selected)) el.ttsVoice.value = selected;
+  const options = [...el.ttsVoice.options];
+  if (options.some((option) => option.value === selected)) el.ttsVoice.value = selected;
+  else if (options.some((option) => option.value === "cloud:kore")) el.ttsVoice.value = "cloud:kore";
+  else if (options.length) el.ttsVoice.selectedIndex = 0;
+  el.ttsPlay.disabled = options.length === 0;
   if (!ttsState.active) {
-    el.ttsStatus.textContent = ttsState.voices.length
-      ? `사용 가능한 목소리 ${ttsState.voices.length}개 · 목소리와 시간을 고른 뒤 재생해보세요.`
-      : "기기 기본 음성으로 들을 수 있어요. 목소리 목록을 불러오는 중입니다.";
+    const cloudCount = ttsState.manifest?.voices?.length || 0;
+    if (cloudCount) el.ttsStatus.textContent = `장별 MP3 ${cloudCount}개 목소리 · 절 번호 없이 이어서 들을 수 있어요.`;
+    else if (options.length) el.ttsStatus.textContent = `기기 음성 ${Math.max(ttsState.voices.length, 1)}개 · 목소리와 시간을 고른 뒤 재생해보세요.`;
+    else el.ttsStatus.textContent = "이 브라우저에서 사용할 수 있는 음성을 찾지 못했어요.";
+  }
+}
+
+function cloudVoiceId() {
+  return el.ttsVoice.value.startsWith("cloud:") ? el.ttsVoice.value.slice(6) : null;
+}
+
+function selectedDeviceVoice() {
+  if (!el.ttsVoice.value.startsWith("device:")) return null;
+  const voiceUri = el.ttsVoice.value.slice(7);
+  return ttsState.voices.find((voice) => voice.voiceURI === voiceUri) || null;
+}
+
+function cloudAudioUrl() {
+  const voice = cloudVoiceId();
+  const manifest = ttsState.manifest;
+  if (!voice || !manifest) return null;
+  const path = manifest.path_template
+    .replace("{voice}", voice)
+    .replace("{book}", state.readerBook)
+    .replace("{chapter_padded}", String(state.readerChapter).padStart(3, "0"));
+  return `${manifest.base_url.replace(/\/$/, "")}/${path}`;
+}
+
+function resetCloudAudio(clearSource = true) {
+  el.chapterAudio.pause();
+  try { el.chapterAudio.currentTime = 0; } catch { /* 메타데이터 로드 전에는 이동할 수 없다. */ }
+  if (clearSource) {
+    el.chapterAudio.removeAttribute("src");
+    el.chapterAudio.load();
   }
 }
 
@@ -279,6 +377,7 @@ function finishReading(message = "이 장을 모두 읽었어요.") {
   ttsState.active = false;
   ttsState.paused = false;
   ttsState.utterance = null;
+  ttsState.mode = null;
   document.querySelectorAll(".reader-verse.speaking").forEach((verse) => verse.classList.remove("speaking"));
   el.ttsStatus.textContent = message;
   updateTtsButtons();
@@ -287,7 +386,29 @@ function finishReading(message = "이 장을 모두 읽었어요.") {
 function stopReading(message = "재생을 멈췄어요.") {
   ttsState.generation += 1;
   if (speechSupported()) window.speechSynthesis.cancel();
+  resetCloudAudio();
   finishReading(message);
+}
+
+async function playCloudChapter(generation) {
+  if (!ttsState.active || ttsState.mode !== "cloud" || generation !== ttsState.generation) return;
+  const source = cloudAudioUrl();
+  if (!source) { stopReading("장별 MP3 주소를 만들지 못했어요. 기기 음성을 선택해보세요."); return; }
+  document.querySelectorAll(".reader-verse.speaking").forEach((verse) => verse.classList.remove("speaking"));
+  if (el.chapterAudio.src !== source) {
+    el.chapterAudio.src = source;
+    el.chapterAudio.load();
+  }
+  el.chapterAudio.playbackRate = Number(el.ttsRate.value) || 1;
+  el.chapterAudio.preservesPitch = true;
+  const book = state.books.find((entry) => entry.code === state.readerBook);
+  const timerText = ttsState.expiresAt ? ` · ${el.ttsTimer.value}분 후 자동 정지` : "";
+  el.ttsStatus.textContent = `${book?.name || state.readerBook} ${state.readerChapter}장 MP3 연결 중${timerText}`;
+  try {
+    await el.chapterAudio.play();
+  } catch {
+    if (generation === ttsState.generation) stopReading("장별 MP3를 재생하지 못했어요. 기기 음성을 선택하거나 잠시 뒤 다시 시도해주세요.");
+  }
 }
 
 function speakCurrentVerse(generation) {
@@ -305,7 +426,7 @@ function speakCurrentVerse(generation) {
   const book = state.books.find((entry) => entry.code === state.readerBook);
   const heading = ttsState.verseIndex === 0 ? `${book?.name || item.book} ${state.readerChapter}장. ` : "";
   const utterance = new SpeechSynthesisUtterance(`${heading}${item.text}`);
-  const selectedVoice = ttsState.voices.find((voice) => voice.voiceURI === el.ttsVoice.value);
+  const selectedVoice = selectedDeviceVoice();
   if (selectedVoice) utterance.voice = selectedVoice;
   utterance.lang = selectedVoice?.lang || "ko-KR";
   utterance.rate = Number(el.ttsRate.value) || 0.9;
@@ -330,17 +451,20 @@ function speakCurrentVerse(generation) {
 }
 
 function toggleReading() {
-  if (!speechSupported()) {
-    el.ttsStatus.textContent = "이 브라우저는 음성 읽기를 지원하지 않아요.";
+  const cloudSelected = Boolean(cloudVoiceId());
+  if (!cloudSelected && !speechSupported()) {
+    el.ttsStatus.textContent = "이 브라우저는 기기 음성 읽기를 지원하지 않아요. GCP MP3를 선택해보세요.";
     return;
   }
   if (ttsState.active) {
     if (ttsState.paused) {
-      window.speechSynthesis.resume();
+      if (ttsState.mode === "cloud") el.chapterAudio.play().catch(() => stopReading("MP3 재생을 다시 시작하지 못했어요."));
+      else window.speechSynthesis.resume();
       ttsState.paused = false;
       el.ttsStatus.textContent = "말씀 읽기를 계속합니다.";
     } else {
-      window.speechSynthesis.pause();
+      if (ttsState.mode === "cloud") el.chapterAudio.pause();
+      else window.speechSynthesis.pause();
       ttsState.paused = true;
       el.ttsStatus.textContent = "잠시 멈췄어요.";
     }
@@ -351,32 +475,43 @@ function toggleReading() {
   const verses = currentChapterVerses();
   if (!verses.length) return;
   ttsState.generation += 1;
-  window.speechSynthesis.cancel();
+  if (speechSupported()) window.speechSynthesis.cancel();
+  resetCloudAudio();
   ttsState.active = true;
   ttsState.paused = false;
+  ttsState.mode = cloudSelected ? "cloud" : "device";
   const selectedIndex = state.readerVerse ? verses.findIndex((item) => item.verse === Number(state.readerVerse)) : -1;
-  ttsState.verseIndex = selectedIndex >= 0 ? selectedIndex : 0;
+  ttsState.verseIndex = cloudSelected ? 0 : (selectedIndex >= 0 ? selectedIndex : 0);
   storeSetting("bibleframe-tts-voice", el.ttsVoice.value);
   storeSetting("bibleframe-tts-rate", el.ttsRate.value);
   storeSetting("bibleframe-tts-timer", el.ttsTimer.value);
   storeSetting("bibleframe-tts-auto-next", el.ttsAutoNext.checked ? "1" : "0");
   scheduleSleepTimer();
   updateTtsButtons();
-  speakCurrentVerse(ttsState.generation);
+  if (cloudSelected) playCloudChapter(ttsState.generation);
+  else speakCurrentVerse(ttsState.generation);
 }
 
-function initTts() {
-  if (!speechSupported()) {
-    [el.ttsVoice, el.ttsRate, el.ttsTimer, el.ttsPlay, el.ttsAutoNext].forEach((control) => { control.disabled = true; });
-    el.ttsStatus.textContent = "이 브라우저는 음성 읽기를 지원하지 않아요.";
-    return;
-  }
+async function initTts() {
   el.ttsRate.value = getStoredSetting("bibleframe-tts-rate", "0.9");
   el.ttsTimer.value = getStoredSetting("bibleframe-tts-timer", "30");
   el.ttsAutoNext.checked = getStoredSetting("bibleframe-tts-auto-next", "1") !== "0";
   populateVoices();
-  if (window.speechSynthesis.addEventListener) window.speechSynthesis.addEventListener("voiceschanged", populateVoices);
-  else window.speechSynthesis.onvoiceschanged = populateVoices;
+  if (speechSupported()) {
+    if (window.speechSynthesis.addEventListener) window.speechSynthesis.addEventListener("voiceschanged", populateVoices);
+    else window.speechSynthesis.onvoiceschanged = populateVoices;
+  }
+  try {
+    const response = await fetch("/api/audio/manifest");
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const manifest = await response.json();
+    if (!Array.isArray(manifest.voices) || !manifest.path_template) throw new Error("manifest format");
+    ttsState.manifest = manifest;
+    populateVoices();
+  } catch {
+    ttsState.manifest = null;
+    populateVoices();
+  }
   updateTtsButtons();
 }
 
@@ -389,15 +524,28 @@ function scrollToResults() {
 
 let debounce;
 let composing = false;
-el.form.addEventListener("submit", (event) => { event.preventDefault(); if (!composing) { setQuery(el.input.value); scrollToResults(); } });
+el.form.addEventListener("submit", (event) => {
+  event.preventDefault();
+  if (!composing) {
+    setQuery(el.input.value);
+    requestRagAnswer(el.input.value);
+    scrollToResults();
+  }
+});
+el.lucky.addEventListener("click", openLuckyVerse);
 el.input.addEventListener("compositionstart", () => { composing = true; clearTimeout(debounce); });
 el.input.addEventListener("compositionend", () => { composing = false; setQuery(el.input.value); });
 el.input.addEventListener("input", (event) => { if (composing || event.isComposing) return; clearTimeout(debounce); debounce = setTimeout(() => setQuery(el.input.value), 160); });
 el.input.addEventListener("keydown", (event) => { if (event.key === "Enter" && !composing && !event.isComposing) { event.preventDefault(); el.form.requestSubmit(); } });
 el.testament.addEventListener("change", () => { state.testament = el.testament.value; if (state.book) { const book = state.books.find((item) => item.code === state.book); if (book?.testament !== state.testament && state.testament) { state.book = ""; el.book.value = ""; } } renderSearch(); });
 el.book.addEventListener("change", () => { state.book = el.book.value; const book = state.books.find((item) => item.code === state.book); if (book) { state.testament = book.testament; el.testament.value = book.testament; } renderSearch(); });
-el.clear.addEventListener("click", () => { state.testament = ""; state.book = ""; el.testament.value = ""; el.book.value = ""; setQuery(""); });
-document.querySelectorAll("[data-query]").forEach((button) => button.addEventListener("click", () => { setQuery(button.dataset.query || ""); scrollToResults(); }));
+el.clear.addEventListener("click", () => { state.testament = ""; state.book = ""; el.testament.value = ""; el.book.value = ""; setQuery(""); clearRagAnswer(); });
+document.querySelectorAll("[data-query]").forEach((button) => button.addEventListener("click", () => {
+  const query = button.dataset.query || "";
+  setQuery(query);
+  requestRagAnswer(query);
+  scrollToResults();
+}));
 document.querySelectorAll("[data-view]").forEach((button) => button.addEventListener("click", () => {
   if (button.dataset.view !== "reader" && ttsState.active) stopReading();
   setView(button.dataset.view, { push: true });
@@ -416,6 +564,11 @@ el.results.addEventListener("click", async (event) => {
   } catch { copyButton.textContent = "복사하지 못했어요"; }
 });
 
+el.ragSources.addEventListener("click", (event) => {
+  const source = event.target.closest("[data-rag-source]");
+  if (source) openReader(source.dataset.code, source.dataset.chapter, source.dataset.verse);
+});
+
 el.readerBook.addEventListener("change", () => { if (ttsState.active) stopReading("성경을 바꿔 재생을 멈췄어요."); state.readerBook = el.readerBook.value; state.readerChapter = 1; state.readerVerse = null; renderReader(); updateUrl({ view: "reader", book: state.readerBook, chapter: 1, verse: null }); });
 el.readerChapter.addEventListener("change", () => { if (ttsState.active) stopReading("장을 바꿔 재생을 멈췄어요."); state.readerChapter = Number(el.readerChapter.value); state.readerVerse = null; renderReader(); updateUrl({ view: "reader", book: state.readerBook, chapter: state.readerChapter, verse: null }); });
 el.previousChapter.addEventListener("click", () => moveChapter(-1));
@@ -429,10 +582,25 @@ el.ttsVoice.addEventListener("change", () => { storeSetting("bibleframe-tts-voic
 el.ttsRate.addEventListener("change", () => { storeSetting("bibleframe-tts-rate", el.ttsRate.value); if (ttsState.active) stopReading("읽기 속도를 바꿨어요. 다시 재생해주세요."); });
 el.ttsTimer.addEventListener("change", () => { storeSetting("bibleframe-tts-timer", el.ttsTimer.value); if (ttsState.active) { scheduleSleepTimer(); el.ttsStatus.textContent = Number(el.ttsTimer.value) ? `${el.ttsTimer.value}분 후 자동으로 멈춥니다.` : "취침 타이머를 해제했어요."; } });
 el.ttsAutoNext.addEventListener("change", () => storeSetting("bibleframe-tts-auto-next", el.ttsAutoNext.checked ? "1" : "0"));
+el.chapterAudio.addEventListener("playing", () => {
+  if (!ttsState.active || ttsState.mode !== "cloud") return;
+  const book = state.books.find((entry) => entry.code === state.readerBook);
+  const timerText = ttsState.expiresAt ? ` · ${el.ttsTimer.value}분 후 자동 정지` : "";
+  el.ttsStatus.textContent = `${book?.name || state.readerBook} ${state.readerChapter}장 듣는 중${timerText}`;
+});
+el.chapterAudio.addEventListener("ended", () => {
+  if (!ttsState.active || ttsState.mode !== "cloud") return;
+  const generation = ttsState.generation;
+  if (el.ttsAutoNext.checked && moveChapter(1, { scroll: false, stopAudio: false })) playCloudChapter(generation);
+  else finishReading("마지막 장까지 모두 들었어요.");
+});
+el.chapterAudio.addEventListener("error", () => {
+  if (ttsState.active && ttsState.mode === "cloud") stopReading("장별 MP3를 불러오지 못했어요. 기기 음성을 선택해보세요.");
+});
 
 function applyUrlState() {
   const url = new URL(window.location.href);
-  const requestedView = ["reader", "faq"].includes(url.searchParams.get("view")) ? url.searchParams.get("view") : "search";
+  const requestedView = ["reader", "downloads", "faq"].includes(url.searchParams.get("view")) ? url.searchParams.get("view") : "search";
   if (requestedView === "reader") {
     openReader(url.searchParams.get("book") || state.readerBook, url.searchParams.get("chapter") || 1, url.searchParams.get("verse"), { push: false });
   } else setView(requestedView, { updateAddress: false });
@@ -441,7 +609,7 @@ window.addEventListener("popstate", applyUrlState);
 
 async function boot() {
   try {
-    const response = await fetch("./bible.json");
+    const response = await fetch("./bible.json?v=20260714-gcp-rag-audio-1");
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const payload = await response.json();
     state.books = payload.books;
@@ -456,6 +624,7 @@ async function boot() {
     el.chapterCount.textContent = payload.meta.chapters.toLocaleString("ko-KR");
     el.verseCount.textContent = payload.meta.verses.toLocaleString("ko-KR");
     populateBooks();
+    el.lucky.disabled = false;
     initTts();
     try { applyFontStep(Number(localStorage.getItem("bibleframe-font-step") ?? 1), false); } catch { applyFontStep(1, false); }
     const url = new URL(window.location.href);

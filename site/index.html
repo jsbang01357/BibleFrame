@@ -3,12 +3,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="한국어 성경 66권을 장·절과 본문으로 찾는 BibleFrame" />
+    <meta name="description" content="Public Domain WEB-C를 Qwen3-Next 80B로 번역한 오픈소스 한국어 가톨릭 성경 73권" />
     <meta name="theme-color" content="#191713" />
     <title>BibleFrame · 성경 말씀 탐색기</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='32' fill='%23191713'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-size='36' fill='%23dfbd82' font-family='serif'%3EB%3C/text%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="./styles.css" />
-    <script type="module" src="./app.js?v=20260713-bedtime-tts-2"></script>
+    <link rel="stylesheet" href="./styles.css?v=20260714-gcp-rag-audio-1" />
+    <script type="module" src="./app.js?v=20260714-gcp-rag-audio-1"></script>
   </head>
   <body>
     <div class="app-shell">
@@ -20,10 +20,11 @@
         <nav class="side-nav" aria-label="주요 기능">
           <button class="active" type="button" data-view="search" aria-current="page"><span>01</span>RAG 검색</button>
           <button type="button" data-view="reader"><span>02</span>성경 브라우저</button>
-          <button type="button" data-view="faq"><span>03</span>FAQ</button>
+          <button type="button" data-view="downloads"><span>03</span>다운로드</button>
+          <button type="button" data-view="faq"><span>04</span>FAQ</button>
         </nav>
         <div class="sidebar-links">
-          <a href="https://ebible.org/bible/details.php?id=kor" target="_blank" rel="noopener">본문 출처 ↗</a>
+          <a href="https://ebible.org/bible/details.php?id=eng-web-c" target="_blank" rel="noopener">원문 출처 ↗</a>
           <a href="https://github.com/jsbang01357/BibleFrame" target="_blank" rel="noopener">GitHub ↗</a>
         </div>
       </aside>
@@ -34,7 +35,7 @@
             <section class="hero" aria-labelledby="hero-title">
               <p class="eyebrow">SEARCH THE SCRIPTURE</p>
               <h1 id="hero-title">찾고 싶은 말씀을<br /><em>책·장·절까지</em> 또렷하게.</h1>
-              <p class="hero-copy">1910 한국어 성경 전체를 본문 키워드나 구절 위치로 찾습니다. 서버로 검색어를 보내지 않아요.</p>
+              <p class="hero-copy">Public Domain WEB-C 73권을 Qwen3-Next 80B로 번역·교정한 오픈소스 한국어 가톨릭 성경입니다. 정확한 구절 검색과 Haystack 의미 검색을 함께 제공합니다.</p>
 
               <form id="searchForm" class="search-panel" role="search">
                 <label for="searchInput">
@@ -44,6 +45,10 @@
                 </label>
                 <button type="submit">말씀 찾기</button>
               </form>
+              <div class="hero-actions">
+                <button id="luckyButton" class="lucky-button" type="button" disabled>✦ 랜덤 말씀</button>
+                <span class="lucky-hint">35,379절 중 한 구절을 바로 엽니다.</span>
+              </div>
               <div class="suggestions" aria-label="추천 검색어">
                 <span>빠른 검색</span>
                 <button type="button" data-query="요한복음 3장 16절">요 3:16</button>
@@ -55,10 +60,10 @@
             </section>
 
             <section class="stats" aria-label="성경 통계">
-              <div><strong id="bookCount">66</strong><span>권</span></div>
-              <div><strong id="chapterCount">1,188</strong><span>장</span></div>
-              <div><strong id="verseCount">30,991</strong><span>절</span></div>
-              <p>Korean Bible 1910 · Public Domain</p>
+              <div><strong id="bookCount">73</strong><span>권</span></div>
+              <div><strong id="chapterCount">1,328</strong><span>장</span></div>
+              <div><strong id="verseCount">35,379</strong><span>절</span></div>
+              <p>WEB Catholic Public Domain 원문 · 한국어 본문 CC0 1.0</p>
             </section>
 
             <section class="explorer" aria-labelledby="resultsTitle">
@@ -66,16 +71,25 @@
                 <div><p class="eyebrow">SCRIPTURE FINDER</p><h2 id="resultsTitle">검색 결과</h2></div>
                 <div class="filters">
                   <label><span>구분</span><select id="testamentFilter"><option value="">구약·신약 전체</option><option value="old">구약</option><option value="new">신약</option></select></label>
-                  <label><span>성경</span><select id="bookFilter"><option value="">66권 전체</option></select></label>
+                  <label><span>성경</span><select id="bookFilter"><option value="">73권 전체</option></select></label>
                 </div>
               </div>
+              <section id="ragAnswer" class="rag-answer" aria-labelledby="ragAnswerTitle" hidden>
+                <div class="rag-answer-head">
+                  <div><span>HAYSTACK HYBRID RAG</span><h3 id="ragAnswerTitle">말씀 길잡이</h3></div>
+                  <p id="ragMode">BM25 + Vertex 의미 검색</p>
+                </div>
+                <p id="ragStatus" class="rag-status" aria-live="polite"></p>
+                <div id="ragText" class="rag-text"></div>
+                <div id="ragSources" class="rag-sources" aria-label="RAG 근거 본문"></div>
+              </section>
               <div class="result-summary"><p id="resultStatus" aria-live="polite">성경 데이터를 불러오는 중입니다.</p><button id="clearButton" type="button" hidden>초기화</button></div>
               <div id="results" class="results" aria-live="polite"></div>
             </section>
 
             <section class="rag-card" aria-labelledby="ragTitle">
               <div><p class="eyebrow">PORTABLE RAG</p><h2 id="ragTitle">말씀 코퍼스를<br />내 AI에도 연결하세요.</h2></div>
-              <div><p>장 단위 JSONL과 출처 메타데이터를 묶었습니다. 특정 AI 서비스나 벡터 DB에 종속되지 않습니다.</p><a href="./downloads/bibleframe-rag.zip" download>RAG ZIP 받기 <span>↓</span></a><a class="guide-link" href="./downloads/README_RAG.md">사용 안내</a></div>
+              <div><p>범용 장 단위 JSONL과 Haystack 네이티브 문서를 함께 묶었습니다. 특정 AI 서비스나 벡터 DB에 종속되지 않습니다.</p><a href="./downloads/bibleframe-rag.zip" download>RAG ZIP 받기 <span>↓</span></a><a class="guide-link" href="./downloads/README_RAG.md">사용 안내</a></div>
             </section>
           </div>
 
@@ -107,7 +121,7 @@
                 <p id="ttsStatus" aria-live="polite">목소리와 시간을 고른 뒤 재생해보세요.</p>
               </div>
               <div class="tts-settings">
-                <label><span>목소리</span><select id="ttsVoice"><option value="">기기 기본 음성</option></select></label>
+                <label><span>목소리</span><select id="ttsVoice"><option value="device:">기기 기본 음성</option></select></label>
                 <label><span>읽기 속도</span><select id="ttsRate"><option value="0.78">아주 천천히</option><option value="0.9" selected>천천히</option><option value="1">보통</option><option value="1.12">조금 빠르게</option></select></label>
                 <label><span>취침 타이머</span><select id="ttsTimer"><option value="0">사용 안 함</option><option value="15">15분</option><option value="30" selected>30분</option><option value="45">45분</option><option value="60">60분</option></select></label>
               </div>
@@ -116,7 +130,8 @@
                 <button id="ttsStop" type="button" disabled>■ 정지</button>
                 <label class="auto-next"><input id="ttsAutoNext" type="checkbox" checked /><span>다음 장 자동재생</span></label>
               </div>
-              <p class="tts-note">기기에 설치된 음성을 사용합니다. 화면이 잠기면 일부 모바일 브라우저에서는 재생이 멈출 수 있어요.</p>
+              <audio id="chapterAudio" preload="metadata"></audio>
+              <p class="tts-note">GCP에서 미리 합성한 절 번호 없는 장별 MP3를 스트리밍합니다. 연결이 어려우면 기기 음성으로도 들을 수 있어요.</p>
             </section>
 
             <nav class="chapter-nav" aria-label="장 이동">
@@ -127,6 +142,69 @@
             <article id="chapterReading" class="chapter-reading" aria-live="polite"></article>
           </section>
 
+          <section class="download-view" data-view-panel="downloads" aria-labelledby="downloadTitle" hidden>
+            <header class="view-header">
+              <p class="eyebrow">OPEN KOREAN CATHOLIC BIBLE</p>
+              <h1 id="downloadTitle">전체 성경<br />내려받기</h1>
+              <p>가톨릭 정경 73권 전체를 읽기·편집·개발·RAG에 맞는 형식으로 자유롭게 사용하세요.</p>
+            </header>
+
+            <section class="open-source-card" aria-labelledby="openSourceTitle">
+              <div>
+                <p class="eyebrow">PUBLIC DOMAIN → QWEN3-NEXT 80B → CC0</p>
+                <h2 id="openSourceTitle">열린 원문으로 만들고,<br />열린 데이터로 돌려드립니다.</h2>
+              </div>
+              <div>
+                <p>eBible.org의 Public Domain <strong>World English Bible (Catholic)</strong> 73권을 Vertex AI의 <strong>Qwen3-Next-80B-A3B-Instruct</strong>로 전체 번역하고, 같은 모델로 영어 원문 대조 교정을 거쳤습니다.</p>
+                <div class="license-badges"><span>원문 Public Domain</span><span>한국어 본문 CC0 1.0</span><span>코드 MIT</span></div>
+              </div>
+            </section>
+
+            <div class="download-grid" aria-label="전체 본문 다운로드 형식">
+              <article class="download-card">
+                <span class="file-type">TXT</span>
+                <h2>일반 텍스트</h2>
+                <p>책·장·절 머리말이 있는 UTF-8 본문입니다. 메모장, 전자책 변환, 간단한 분석에 적합합니다.</p>
+                <a href="./downloads/bibleframe-ko-catholic-73.txt" download>TXT 받기 <span>↓</span></a>
+              </article>
+              <article class="download-card">
+                <span class="file-type">JSON</span>
+                <h2>통합 JSON</h2>
+                <p>73권 메타데이터와 35,379절을 한 파일에 담았습니다. 웹·앱에서 바로 불러오기 좋습니다.</p>
+                <a href="./downloads/bibleframe-ko-catholic-73.json" download>JSON 받기 <span>↓</span></a>
+              </article>
+              <article class="download-card">
+                <span class="file-type">JSONL</span>
+                <h2>절 단위 JSONL</h2>
+                <p>한 줄에 한 절씩 저장해 스트리밍 처리, 데이터 분석, 임베딩 파이프라인에 적합합니다.</p>
+                <a href="./downloads/bibleframe-ko-catholic-73.jsonl" download>JSONL 받기 <span>↓</span></a>
+              </article>
+              <article class="download-card featured">
+                <span class="file-type">DOCX</span>
+                <h2>Word 편집본</h2>
+                <p>책·장 제목과 페이지 번호를 갖춘 전체 편집본입니다. Word에서 메모하고 고쳐 쓸 수 있습니다.</p>
+                <a href="./downloads/bibleframe-ko-catholic-73.docx" download>Word 받기 <span>↓</span></a>
+              </article>
+              <article class="download-card featured">
+                <span class="file-type">PDF</span>
+                <h2>PDF 읽기본</h2>
+                <p>73권 목차와 책갈피를 넣고, 각 절을 새 줄에서 시작하도록 편집한 전체 읽기·인쇄본입니다.</p>
+                <a href="./downloads/bibleframe-ko-catholic-73.pdf" download>PDF 받기 <span>↓</span></a>
+              </article>
+              <article class="download-card rag-download">
+                <span class="file-type">RAG ZIP</span>
+                <h2>장 단위 AI 패키지</h2>
+                <p>범용·Haystack JSONL과 바로 실행할 BM25 예제를 묶었습니다. 개인 AI와 벡터 DB에 연결하세요.</p>
+                <a href="./downloads/bibleframe-rag.zip" download>RAG ZIP 받기 <span>↓</span></a>
+              </article>
+            </div>
+
+            <aside class="download-notice">
+              <strong>꼭 확인해 주세요</strong>
+              <p>한국천주교주교회의 공용 번역본이 아닌 비공인 기계 번역 초안입니다. 전례용·교리 판정용으로 사용하지 마세요. 형식 설명과 라이선스는 <a href="./downloads/README_DOWNLOADS.md">다운로드 안내</a>와 <a href="https://github.com/jsbang01357/BibleFrame" target="_blank" rel="noopener">GitHub 저장소</a>에서 확인할 수 있습니다.</p>
+            </aside>
+          </section>
+
           <section class="faq-view" data-view-panel="faq" aria-labelledby="faqTitle" hidden>
             <header class="view-header">
               <p class="eyebrow">HELP &amp; INFORMATION</p>
@@ -134,18 +212,20 @@
               <p>BibleFrame의 본문, 검색, RAG 자료에 관한 안내입니다.</p>
             </header>
             <div class="faq-list">
-              <details open><summary>어떤 성경 번역을 사용하나요?</summary><p>eBible.org가 Public Domain으로 제공하는 Korean Bible 1910을 사용합니다. 현대 번역과 표현이 다를 수 있습니다.</p></details>
-              <details><summary>검색어가 서버에 저장되나요?</summary><p>아니요. 검색과 성경 읽기는 내려받은 데이터로 사용자의 브라우저 안에서 처리됩니다.</p></details>
-              <details><summary>RAG ZIP은 어디에 쓰나요?</summary><p>장 단위 JSONL 본문을 ChatGPT 프로젝트나 벡터 데이터베이스 등에 넣어 개인용 성경 질의 시스템을 만들 때 사용할 수 있습니다.</p></details>
+              <details open><summary>어떤 성경 번역을 사용하나요?</summary><p>eBible.org가 Public Domain으로 제공하는 World English Bible (Catholic) 73권을 Vertex AI의 Qwen3-Next-80B-A3B-Instruct로 새로 번역하고, 같은 모델로 영어 원문과 다시 대조한 비공인 한국어 기계 번역 초안입니다.</p></details>
+              <details><summary>정말 오픈소스로 쓸 수 있나요?</summary><p>네. 영어 원문은 Public Domain이고, BibleFrame 한국어 본문과 데이터는 CC0 1.0, 사이트와 빌드 코드는 MIT로 공개합니다. 복사·수정·재배포할 수 있지만 기계 번역의 정확성이나 전례·교리 적합성을 보증하지 않습니다.</p></details>
+              <details><summary>검색어가 서버에 저장되나요?</summary><p>정확한 구절 검색과 성경 읽기는 브라우저 안에서 처리됩니다. 말씀 길잡이를 요청하면 질문이 GCP의 Haystack 검색 API와 Qwen 모델로 전송되지만 별도 사용자 계정이나 검색 기록 기능은 두지 않습니다.</p></details>
+              <details><summary>RAG ZIP은 어디에 쓰나요?</summary><p>장 단위·소청크 JSONL 본문과 Haystack 예제를 ChatGPT 프로젝트나 벡터 데이터베이스 등에 넣어 개인용 성경 질의 시스템을 만들 때 사용할 수 있습니다. 웹 검색은 BM25와 Vertex 다국어 임베딩을 결합합니다.</p></details>
               <details><summary>글자를 더 크게 볼 수 있나요?</summary><p>성경 브라우저 상단의 ‘가−’, 퍼센트, ‘가＋’ 버튼으로 본문 크기를 조절할 수 있습니다. 선택한 크기는 이 기기에 기억됩니다.</p></details>
-              <details><summary>목소리로 성경을 들을 수 있나요?</summary><p>성경 브라우저의 ‘말씀 듣기’에서 기기에 설치된 음성, 속도, 취침 타이머를 선택할 수 있습니다. 사용 가능한 목소리 수와 화면 잠금 중 재생 여부는 기기와 브라우저에 따라 다릅니다.</p></details>
-              <details><summary>본문에 빠진 부분이 있나요?</summary><p>제공 원본은 베드로전서가 4장 14절에서 끝납니다. 다른 번역을 임의로 섞지 않고 원본 상태를 그대로 밝힙니다.</p></details>
+              <details><summary>목소리로 성경을 들을 수 있나요?</summary><p>성경 브라우저의 ‘말씀 듣기’에서 GCP Chirp 3 HD의 여성·남성 장별 MP3 또는 기기 음성을 고를 수 있습니다. MP3에는 절 번호를 넣지 않았고, 취침 타이머와 다음 장 자동재생을 지원합니다.</p></details>
+              <details><summary>가톨릭 공용 번역본인가요?</summary><p>아닙니다. 한국천주교주교회의 공용 번역본이 아니며 전례용·교리 판정용으로 사용하면 안 됩니다. CBCK 본문은 저장하거나 재배포하지 않았습니다.</p></details>
+              <details><summary>본문에 빠진 부분이 있나요?</summary><p>WEB-C 원문에서 각주로만 남아 본문이 없는 29개 절 레코드는 다른 번역으로 임의 보충하지 않고 검색·읽기에서 제외했습니다.</p></details>
             </div>
-            <aside class="notice"><strong>본문 안내</strong><p>이 사이트는 eBible.org가 Public Domain으로 제공하는 1910 한국어 성경을 사용합니다. 자세한 검수 기록은 GitHub 저장소에서 확인할 수 있습니다.</p></aside>
+            <aside class="notice"><strong>본문 안내</strong><p>가톨릭 정경 기반의 비공인 기계 번역 초안입니다. 원문·모델·검수 절차와 산출물은 GitHub 저장소에서 확인할 수 있습니다.</p></aside>
           </section>
         </main>
 
-        <footer><p>BibleFrame · source-traceable scripture search</p><p>Made with care at jisong.dev</p></footer>
+        <footer><p>BibleFrame · Public Domain WEB-C → Qwen3-Next 80B · 본문 CC0 1.0</p><p>Made with care at jisong.dev</p></footer>
       </div>
     </div>
   </body>

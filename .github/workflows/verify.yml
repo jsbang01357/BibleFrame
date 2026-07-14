@@ -9,15 +9,37 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
-      - run: python3 scripts/build_data.py
-      - run: python3 scripts/test_build.py
+      - name: 문서 빌드 의존성 설치
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-nanum
+          python3 -m pip install python-docx reportlab pypdf
+          python3 -m pip install -r requirements-service.txt
+      - run: python3 scripts/test_translation_source.py
+      - run: >-
+          python3 scripts/test_translation_output.py
+          --input translation/output/bibleframe-ko-reviewed-qwen3-next-v2b.jsonl
+          --expect-count 35408
+          --model Qwen3-Next-80B-A3B-Instruct-MaaS
+          --prompt-version bibleframe-ko-v2-maas
+          --status machine_reviewed
+          --review-prompt-version bibleframe-ko-review-v2
+      - run: python3 scripts/build_catholic_data.py
+      - run: python3 scripts/build_downloads.py
+      - run: python3 scripts/test_catholic_build.py
+      - run: python3 scripts/test_haystack_export.py
+      - run: python3 scripts/test_haystack_embeddings.py
+      - run: HAYSTACK_TELEMETRY_ENABLED=False python3 scripts/test_rag_service.py
+      - run: python3 scripts/test_audio_pipeline.py
+      - run: python3 scripts/test_downloads.py
       - run: node scripts/test_search.mjs
+      - run: node scripts/test_web_runtime.mjs
       - name: 생성물 변경 여부 확인
-        run: git diff --exit-code -- site/bible.json rag/chapters.jsonl site/downloads/
+        run: git diff --exit-code -- site/bible.json rag/ site/downloads/
