@@ -7,8 +7,8 @@
     <meta name="theme-color" content="#191713" />
     <title>BibleFrame · 성경 말씀 탐색기</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='32' fill='%23191713'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-size='36' fill='%23dfbd82' font-family='serif'%3EB%3C/text%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="./styles.css?v=20260714-lucky-haystack-1" />
-    <script type="module" src="./app.js?v=20260714-lucky-haystack-1"></script>
+    <link rel="stylesheet" href="./styles.css?v=20260714-gcp-rag-audio-1" />
+    <script type="module" src="./app.js?v=20260714-gcp-rag-audio-1"></script>
   </head>
   <body>
     <div class="app-shell">
@@ -35,7 +35,7 @@
             <section class="hero" aria-labelledby="hero-title">
               <p class="eyebrow">SEARCH THE SCRIPTURE</p>
               <h1 id="hero-title">찾고 싶은 말씀을<br /><em>책·장·절까지</em> 또렷하게.</h1>
-              <p class="hero-copy">Public Domain WEB-C 73권을 Qwen3-Next 80B로 번역·교정한 오픈소스 한국어 가톨릭 성경입니다. 검색어는 서버로 보내지 않아요.</p>
+              <p class="hero-copy">Public Domain WEB-C 73권을 Qwen3-Next 80B로 번역·교정한 오픈소스 한국어 가톨릭 성경입니다. 정확한 구절 검색과 Haystack 의미 검색을 함께 제공합니다.</p>
 
               <form id="searchForm" class="search-panel" role="search">
                 <label for="searchInput">
@@ -74,6 +74,15 @@
                   <label><span>성경</span><select id="bookFilter"><option value="">73권 전체</option></select></label>
                 </div>
               </div>
+              <section id="ragAnswer" class="rag-answer" aria-labelledby="ragAnswerTitle" hidden>
+                <div class="rag-answer-head">
+                  <div><span>HAYSTACK HYBRID RAG</span><h3 id="ragAnswerTitle">말씀 길잡이</h3></div>
+                  <p id="ragMode">BM25 + Vertex 의미 검색</p>
+                </div>
+                <p id="ragStatus" class="rag-status" aria-live="polite"></p>
+                <div id="ragText" class="rag-text"></div>
+                <div id="ragSources" class="rag-sources" aria-label="RAG 근거 본문"></div>
+              </section>
               <div class="result-summary"><p id="resultStatus" aria-live="polite">성경 데이터를 불러오는 중입니다.</p><button id="clearButton" type="button" hidden>초기화</button></div>
               <div id="results" class="results" aria-live="polite"></div>
             </section>
@@ -112,7 +121,7 @@
                 <p id="ttsStatus" aria-live="polite">목소리와 시간을 고른 뒤 재생해보세요.</p>
               </div>
               <div class="tts-settings">
-                <label><span>목소리</span><select id="ttsVoice"><option value="">기기 기본 음성</option></select></label>
+                <label><span>목소리</span><select id="ttsVoice"><option value="device:">기기 기본 음성</option></select></label>
                 <label><span>읽기 속도</span><select id="ttsRate"><option value="0.78">아주 천천히</option><option value="0.9" selected>천천히</option><option value="1">보통</option><option value="1.12">조금 빠르게</option></select></label>
                 <label><span>취침 타이머</span><select id="ttsTimer"><option value="0">사용 안 함</option><option value="15">15분</option><option value="30" selected>30분</option><option value="45">45분</option><option value="60">60분</option></select></label>
               </div>
@@ -121,7 +130,8 @@
                 <button id="ttsStop" type="button" disabled>■ 정지</button>
                 <label class="auto-next"><input id="ttsAutoNext" type="checkbox" checked /><span>다음 장 자동재생</span></label>
               </div>
-              <p class="tts-note">기기에 설치된 음성을 사용합니다. 화면이 잠기면 일부 모바일 브라우저에서는 재생이 멈출 수 있어요.</p>
+              <audio id="chapterAudio" preload="metadata"></audio>
+              <p class="tts-note">GCP에서 미리 합성한 절 번호 없는 장별 MP3를 스트리밍합니다. 연결이 어려우면 기기 음성으로도 들을 수 있어요.</p>
             </section>
 
             <nav class="chapter-nav" aria-label="장 이동">
@@ -204,10 +214,10 @@
             <div class="faq-list">
               <details open><summary>어떤 성경 번역을 사용하나요?</summary><p>eBible.org가 Public Domain으로 제공하는 World English Bible (Catholic) 73권을 Vertex AI의 Qwen3-Next-80B-A3B-Instruct로 새로 번역하고, 같은 모델로 영어 원문과 다시 대조한 비공인 한국어 기계 번역 초안입니다.</p></details>
               <details><summary>정말 오픈소스로 쓸 수 있나요?</summary><p>네. 영어 원문은 Public Domain이고, BibleFrame 한국어 본문과 데이터는 CC0 1.0, 사이트와 빌드 코드는 MIT로 공개합니다. 복사·수정·재배포할 수 있지만 기계 번역의 정확성이나 전례·교리 적합성을 보증하지 않습니다.</p></details>
-              <details><summary>검색어가 서버에 저장되나요?</summary><p>아니요. 검색과 성경 읽기는 내려받은 데이터로 사용자의 브라우저 안에서 처리됩니다.</p></details>
-              <details><summary>RAG ZIP은 어디에 쓰나요?</summary><p>장 단위 JSONL 본문을 ChatGPT 프로젝트나 벡터 데이터베이스 등에 넣어 개인용 성경 질의 시스템을 만들 때 사용할 수 있습니다.</p></details>
+              <details><summary>검색어가 서버에 저장되나요?</summary><p>정확한 구절 검색과 성경 읽기는 브라우저 안에서 처리됩니다. 말씀 길잡이를 요청하면 질문이 GCP의 Haystack 검색 API와 Qwen 모델로 전송되지만 별도 사용자 계정이나 검색 기록 기능은 두지 않습니다.</p></details>
+              <details><summary>RAG ZIP은 어디에 쓰나요?</summary><p>장 단위·소청크 JSONL 본문과 Haystack 예제를 ChatGPT 프로젝트나 벡터 데이터베이스 등에 넣어 개인용 성경 질의 시스템을 만들 때 사용할 수 있습니다. 웹 검색은 BM25와 Vertex 다국어 임베딩을 결합합니다.</p></details>
               <details><summary>글자를 더 크게 볼 수 있나요?</summary><p>성경 브라우저 상단의 ‘가−’, 퍼센트, ‘가＋’ 버튼으로 본문 크기를 조절할 수 있습니다. 선택한 크기는 이 기기에 기억됩니다.</p></details>
-              <details><summary>목소리로 성경을 들을 수 있나요?</summary><p>성경 브라우저의 ‘말씀 듣기’에서 기기에 설치된 음성, 속도, 취침 타이머를 선택할 수 있습니다. 사용 가능한 목소리 수와 화면 잠금 중 재생 여부는 기기와 브라우저에 따라 다릅니다.</p></details>
+              <details><summary>목소리로 성경을 들을 수 있나요?</summary><p>성경 브라우저의 ‘말씀 듣기’에서 GCP Chirp 3 HD의 여성·남성 장별 MP3 또는 기기 음성을 고를 수 있습니다. MP3에는 절 번호를 넣지 않았고, 취침 타이머와 다음 장 자동재생을 지원합니다.</p></details>
               <details><summary>가톨릭 공용 번역본인가요?</summary><p>아닙니다. 한국천주교주교회의 공용 번역본이 아니며 전례용·교리 판정용으로 사용하면 안 됩니다. CBCK 본문은 저장하거나 재배포하지 않았습니다.</p></details>
               <details><summary>본문에 빠진 부분이 있나요?</summary><p>WEB-C 원문에서 각주로만 남아 본문이 없는 29개 절 레코드는 다른 번역으로 임의 보충하지 않고 검색·읽기에서 제외했습니다.</p></details>
             </div>

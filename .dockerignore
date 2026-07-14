@@ -1,0 +1,12 @@
+.git
+.github
+.wrangler
+.venv*
+__pycache__
+qa
+tasks
+translation
+vendor
+tmp
+.DS_Store
+*.pyc

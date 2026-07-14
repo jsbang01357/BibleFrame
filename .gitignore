@@ -1,6 +1,7 @@
 .DS_Store
 __pycache__/
 .venv*/
+rag/.haystack_embeddings.checkpoint.jsonl
 *.pyc
 .wrangler/
 tmp/

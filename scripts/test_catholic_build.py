@@ -59,7 +59,7 @@ def main() -> None:
 
     with zipfile.ZipFile(ROOT / "site/downloads/bibleframe-rag.zip") as archive:
         assert set(archive.namelist()) == {
-            "chapters.jsonl", "haystack_documents.jsonl", "query_haystack.py",
+            "chapters.jsonl", "haystack_documents.jsonl", "haystack_passages.jsonl", "query_haystack.py",
             "requirements-haystack.txt", "README_RAG.md",
         }
         assert archive.testzip() is None

@@ -27,7 +27,17 @@ def main() -> None:
     assert all(document["meta"]["translation_model"] == "Qwen3-Next-80B-A3B-Instruct" for document in documents)
     assert normalize_query("두려움에 관한 말씀") == "두려움"
     assert normalize_query("사랑에 대해 알려줘") == "사랑"
-    print("OK: Haystack 네이티브 장 문서 1,328개 검증 완료")
+
+    passages = [
+        json.loads(line)
+        for line in (ROOT / "rag" / "haystack_passages.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    assert len(passages) == 2_706
+    assert len({passage["id"] for passage in passages}) == len(passages)
+    assert max(len(passage["content"].encode("utf-8")) for passage in passages) <= 2_500
+    assert all(passage["meta"]["verse_start"] <= passage["meta"]["verse_end"] for passage in passages)
+    print("OK: Haystack 장 문서 1,328개 · 의미 검색 소청크 2,706개 검증 완료")
 
 
 if __name__ == "__main__":

@@ -2,6 +2,11 @@
 
 ## 진행 중
 
+- [x] `jisong-cloud-492111`에 Cloud Run 웹·API 서비스와 오디오 버킷을 구성한다.
+- [x] Haystack BM25와 Vertex 의미 임베딩을 결합한 하이브리드 RAG API를 구현한다.
+- [x] 절 번호를 제외한 장별 음성 원고와 두 가지 한국어 MP3 합성 파이프라인을 구현한다.
+- [x] 73권 1,328장 오디오를 Cloud Run Job으로 생성하고 Cloud Storage 스트리밍을 연결한다.
+- [x] `bibleframe.jisong.dev`를 GCP 서비스로 전환하고 검색·재생·Range 응답을 검증한다.
 - [x] 첫 화면에 무작위 구절을 바로 여는 `랜덤 말씀` 기능을 추가한다.
 - [x] Haystack 네이티브 문서 JSONL과 선택형 로컬 BM25 검색 예제를 추가한다.
 - [x] 정적 검색 회귀·RAG 산출물·데스크톱/모바일 화면을 검증한다.
@@ -55,12 +60,16 @@
 - 전환 원문: Public Domain World English Bible (Catholic) 73권
 - 전환 장·절: 1,328장, 원문 레코드 35,408개
 - 운영 주소: `https://bibleframe.jisong.dev`
-- Pages 주소: `https://bibleframe.pages.dev`
+- GCP 서비스: Cloud Run `bibleframe-00007-hkj` (`asia-northeast1`, 최소 0·최대 5)
+- 운영 RAG: Haystack BM25 + Vertex 의미 임베딩 + Qwen3-Next 80B 인용 답변
+- 운영 오디오: Chirp 3 HD Kore·Charon, 1,328장 × 2개 = MP3 2,656개
+- 오디오 버킷: `gs://bibleframe-audio-jisong-cloud-492111` (공개 Range 스트리밍)
+- 비상 정적 주소: `https://bibleframe.pages.dev`
 - GitHub: `https://github.com/jsbang01357/BibleFrame`
-- 이번 변경: 첫 화면 랜덤 말씀, Haystack 네이티브 JSONL·로컬 BM25 예제
-- 운영 배포: 랜덤 구절 이동·강조와 새 RAG ZIP `200` 확인
-- 남은 작업: GitHub 초안 PR `#1` 검토·병합
-- 현재 진행: 커밋 `7b7c478` GitHub Actions 성공, 초안 PR 검토 대기
+- 이번 변경: GCP 이관, Haystack 하이브리드 RAG, 절 번호 없는 장별 MP3와 취침 스트리밍
+- 운영 검증: 정확 구절·일반 질문 RAG, 브라우저 이동·확대, PDF 다운로드, 오디오 Range `206`
+- 오디오 전수 검증: Kore 1,328개·Charon 1,328개, 누락·외부 경로·메타데이터 이상 모두 0
+- 현재 진행: 작업 브랜치와 초안 PR `#1`에서 전체 변경 검토
 
 ## 가톨릭 성경 전환 메모
 
